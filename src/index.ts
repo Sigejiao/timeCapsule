@@ -46,7 +46,7 @@ function createEmbeddingText(
 ): string {
   return [
     `情景：${card.situation}`,
-    `模式：${card.pattern}`,
+    `模式：${card.recurringPattern}`,
     `思维张力：${card.thinkingTension}`,
     `动机需求：${card.motivationNeed}`,
     `关键词：${card.keywords.join("、")}`,
@@ -220,7 +220,7 @@ async function processNewNote(
 
   if (match.note.patternCard) {
     console.log("\n旧笔记的模式：");
-    console.log(match.note.patternCard.pattern);
+    console.log(match.note.patternCard.recurringPattern);
   }
 }
 
@@ -237,7 +237,7 @@ async function showNotes(notes: Note[]): Promise<void> {
     console.log(`状态：${note.status}`);
 
     if (note.patternCard) {
-      console.log(`模式：${note.patternCard.pattern}`);
+      console.log(`模式：${note.patternCard.recurringPattern}`);
     }
   });
 }
