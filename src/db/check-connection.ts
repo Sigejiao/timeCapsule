@@ -20,9 +20,13 @@ try {
     SELECT
       current_database() AS database_name,
       current_user AS user_name,
-      extversion AS vector_version
-    FROM pg_extension
-    WHERE extname = 'vector';
+      inet_server_addr() AS server_address,
+      inet_server_port() AS server_port,
+      (
+      SELECT extversion
+      FROM pg_extension
+      WHERE extname = 'vector'
+      ) AS vector_version;
   `);
 
   console.log("数据库连接成功：");
