@@ -335,13 +335,13 @@ async function processNewNote(
     oldNoteId: match.note.id,
     similarity: match.similarity,
     selectionMethod: "pattern_top_1",
-    shownAt,
+    shownAt: new Date().toISOString(),
     feedback: null,
   };
 
-  encounters.push(encounter);
+  await insertEncounterIntoDatabase(encounter);
 
-  await writeJson(encountersFile, encounters);
+  encounters.push(encounter);
 
   console.log("\n找到了一条与你当前状态相呼应的旧笔记：");
   console.log("--------------------------------");
@@ -378,10 +378,7 @@ async function showNotes(notes: Note[]): Promise<void> {
 async function main(): Promise<void> {
   const notes = await readNotesFromDatabase();
 
-  const encounters = await readJson<Encounter[]>(
-    encountersFile,
-    [],
-  );
+  const encounters = await readEncountersFromDatabase();
 
   const readline = createInterface({
     input: stdin,
