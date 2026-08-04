@@ -1,5 +1,4 @@
 import { randomUUID } from "node:crypto";
-import { readFile, writeFile } from "node:fs/promises";
 import { createInterface } from "node:readline/promises";
 import { stdin, stdout } from "node:process";
 
@@ -20,20 +19,9 @@ import type {
   PatternCard,
 } from "./types.ts";
 
-// const notesFile = new URL("../data/notes.json", import.meta.url);
-const encountersFile = new URL("../data/encounters.json",import.meta.url);
 
-async function readJson<T>(
-  file: URL,
-  fallback: T,
-): Promise<T> {
-  try {
-    const content = await readFile(file, "utf-8");
-    return JSON.parse(content) as T;
-  } catch {
-    return fallback;
-  }
-}
+
+
 
 const currentUserId = "demo";
 
@@ -149,17 +137,6 @@ async function updateNoteInDatabase(
 }
 
 
-
-async function writeJson<T>(
-  file: URL,
-  data: T,
-): Promise<void> {
-  await writeFile(
-    file,
-    JSON.stringify(data, null, 2),
-    "utf-8",
-  );
-}
 
 function createEmbeddingText(
   card: PatternCard,
@@ -335,7 +312,7 @@ async function processNewNote(
     oldNoteId: match.note.id,
     similarity: match.similarity,
     selectionMethod: "pattern_top_1",
-    shownAt: new Date().toISOString(),
+    shownAt,
     feedback: null,
   };
 
