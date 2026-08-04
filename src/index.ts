@@ -17,7 +17,7 @@ import type {
   PatternCard,
 } from "./types.ts";
 
-const notesFile = new URL("../data/notes.json", import.meta.url);
+// const notesFile = new URL("../data/notes.json", import.meta.url);
 const encountersFile = new URL("../data/encounters.json",import.meta.url);
 
 async function readJson<T>(
