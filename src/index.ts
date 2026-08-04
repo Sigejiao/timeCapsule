@@ -6,7 +6,7 @@ import { stdin, stdout } from "node:process";
 import { analyzePattern } from "./ai/analyze-pattern.ts";
 import { createEmbedding } from "./ai/create-embedding.ts";
 
-import { asc,  eq } from "drizzle-orm";
+import { asc,  eq, and } from "drizzle-orm";
 
 import { db } from "./db/client.ts";
 import { notes as notesTable } from "./db/schema.ts";
@@ -65,6 +65,46 @@ async function readNotesFromDatabase(): Promise<Note[]> {
 }
 
 
+
+async function insertNoteIntoDatabase(
+  note: Note,
+): Promise<void> {
+  await db.insert(notesTable).values({
+    id: note.id,
+    userId: currentUserId,
+    content: note.content,
+    createdAt: new Date(note.createdAt),
+    status: note.status,
+  });   
+}
+
+async function updateNoteInDatabase(
+  note: Note,
+): Promise<void> {
+  const [ updatedNote ] = await db
+    .update(notesTable)
+    .set({
+      status: note.status,
+      patternCard: note.patternCard ?? null,
+      embedding: note.embedding ?? null,
+      updatedAt: new Date(),
+    })
+    .where(
+      and(
+        eq(notesTable.id, note.id),
+        eq(notesTable.userId, currentUserId),
+      ),
+    )
+    .returning({
+      id: notesTable.id,
+    });
+    
+  if (!updatedNote) {
+    throw new Error(
+      `未找到要更新的笔记: ${note.id}`,
+    );  
+  }
+}
 
 async function writeJson<T>(
   file: URL,
@@ -188,10 +228,12 @@ async function processNewNote(
     status: "pending",
   };
 
-  notes.push(newNote);
 
   // 先保存原文，防止后面的 API 调用失败导致内容丢失。
-  await writeJson(notesFile, notes);
+  await insertNoteIntoDatabase(newNote);
+
+  // 同步到内存
+  notes.push(newNote);
 
   console.log("\n原始笔记已保存。");
   console.log("正在生成模式卡片……");
@@ -203,7 +245,7 @@ async function processNewNote(
     );
   } catch (error) {
     newNote.status = "analysis_failed";
-    await writeJson(notesFile, notes);
+    await updateNoteInDatabase(newNote);
     throw error;
   }
 
@@ -214,14 +256,15 @@ async function processNewNote(
     newNote.embedding = await createEmbedding(
       newNote.embeddingText,
     );
-    newNote.status = "ready";
-    await writeJson(notesFile, notes);
   } catch (error) {
     newNote.status = "embedding_failed";
-    await writeJson(notesFile, notes);
+    await updateNoteInDatabase(newNote);
     throw error;
   }
 
+    newNote.status = "ready";
+    await updateNoteInDatabase(newNote);
+  
   console.log("向量生成完成。");
 
   console.log("\n模式卡片：");
@@ -254,10 +297,7 @@ async function processNewNote(
 
   encounters.push(encounter);
 
-  await Promise.all([
-    writeJson(notesFile, notes),
-    writeJson(encountersFile, encounters),
-  ]);
+  await writeJson(encountersFile, encounters);
 
   console.log("\n找到了一条与你当前状态相呼应的旧笔记：");
   console.log("--------------------------------");
@@ -292,10 +332,7 @@ async function showNotes(notes: Note[]): Promise<void> {
 }
 
 async function main(): Promise<void> {
-  const notes = await readJson<Note[]>(
-    notesFile,
-    [],
-  );
+  const notes = await readNotesFromDatabase();
 
   const encounters = await readJson<Encounter[]>(
     encountersFile,
