@@ -9,7 +9,10 @@ import { createEmbedding } from "./ai/create-embedding.ts";
 import { asc,  eq, and } from "drizzle-orm";
 
 import { db } from "./db/client.ts";
-import { notes as notesTable } from "./db/schema.ts";
+import { 
+  notes as notesTable,
+  encounters as encountersTable
+} from "./db/schema.ts";
 
 import type {
   Encounter,
@@ -64,7 +67,31 @@ async function readNotesFromDatabase(): Promise<Note[]> {
   }));
 }
 
+async function readEncountersFromDatabase(): Promise<Encounter[]> {
+  const rows = await db
+    .select({
+      id: encountersTable.id,
+      newNoteId: encountersTable.newNoteId,
+      oldNoteId: encountersTable.oldNoteId,
+      similarity: encountersTable.similarity,
+      selectionMethod: encountersTable.selectionMethod,
+      shownAt: encountersTable.shownAt,
+      feedback: encountersTable.feedback,
+    })
+    .from(encountersTable)
+    .where(eq(encountersTable.userId, currentUserId))
+    .orderBy(asc(encountersTable.shownAt));
 
+  return rows.map((row) => ({
+    id: row.id,
+    newNoteId: row.newNoteId,
+    oldNoteId: row.oldNoteId,
+    similarity: row.similarity,
+    selectionMethod: row.selectionMethod,
+    shownAt: row.shownAt.toISOString(),
+    feedback: row.feedback,
+  }));
+}
 
 async function insertNoteIntoDatabase(
   note: Note,
@@ -76,6 +103,21 @@ async function insertNoteIntoDatabase(
     createdAt: new Date(note.createdAt),
     status: note.status,
   });   
+}
+
+async function insertEncounterIntoDatabase(
+  encounter: Encounter,
+): Promise<void> {
+  await db.insert(encountersTable).values({
+    id: encounter.id,
+    userId: currentUserId,
+    newNoteId: encounter.newNoteId,
+    oldNoteId: encounter.oldNoteId,
+    similarity: encounter.similarity,
+    selectionMethod: encounter.selectionMethod,
+    shownAt: new Date(encounter.shownAt),
+    feedback: encounter.feedback ?? null,
+  });
 }
 
 async function updateNoteInDatabase(
@@ -105,6 +147,8 @@ async function updateNoteInDatabase(
     );  
   }
 }
+
+
 
 async function writeJson<T>(
   file: URL,
