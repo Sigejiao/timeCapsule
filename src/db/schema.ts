@@ -1,22 +1,32 @@
 import {
-  boolean,
+  jsonb,
   pgTable,
   text,
   timestamp,
+  uuid,
+  vector,
 } from "drizzle-orm/pg-core";
 
-export const users = pgTable("users", {
-  id: text("id").primaryKey(),
+export const notes = pgTable("notes", {
+  id: uuid("id")
+    .primaryKey()
+    .defaultRandom(),
 
-  name: text("name").notNull(),
+  userId: text("user_id")
+    .notNull(),
 
-  email: text("email").notNull().unique(),
+  content: text("content")
+    .notNull(),
 
-  emailVerified: boolean("email_verified")
+  patternCard: jsonb("pattern_card"),
+
+  embedding: vector("embedding", {
+    dimensions: 1024,
+  }),
+
+  status: text("status")
     .notNull()
-    .default(false),
-
-  image: text("image"),
+    .default("processing"),
 
   createdAt: timestamp("created_at", {
     withTimezone: true,
@@ -29,4 +39,5 @@ export const users = pgTable("users", {
   })
     .notNull()
     .defaultNow(),
+  
 });

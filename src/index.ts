@@ -13,10 +13,7 @@ import type {
 } from "./types.ts";
 
 const notesFile = new URL("../data/notes.json", import.meta.url);
-const encountersFile = new URL(
-  "../data/encounters.json",
-  import.meta.url,
-);
+const encountersFile = new URL("../data/encounters.json",import.meta.url);
 
 async function readJson<T>(
   file: URL,
@@ -52,7 +49,6 @@ function createEmbeddingText(
     `关键词：${card.keywords.join("、")}`,
   ].join("\n");
 }
-
 function cosineSimilarity(
   vectorA: number[],
   vectorB: number[],
@@ -66,19 +62,26 @@ function cosineSimilarity(
   let lengthB = 0;
 
   for (let i = 0; i < vectorA.length; i++) {
-    dotProduct += vectorA[i] * vectorB[i];
-    lengthA += vectorA[i] * vectorA[i];
-    lengthB += vectorB[i] * vectorB[i];
+    const valueA = vectorA[i];
+    const valueB = vectorB[i];
+
+    if (valueA === undefined || valueB === undefined) {
+      throw new Error(`向量在第 ${i} 个位置缺少数值`);
+    }
+
+    dotProduct += valueA * valueB;
+    lengthA += valueA * valueA;
+    lengthB += valueB * valueB;
   }
 
-  const denominator =
-    Math.sqrt(lengthA) * Math.sqrt(lengthB);
+  const magnitudeA = Math.sqrt(lengthA);
+  const magnitudeB = Math.sqrt(lengthB);
 
-  if (denominator === 0) {
+  if (magnitudeA === 0 || magnitudeB === 0) {
     return 0;
   }
 
-  return dotProduct / denominator;
+  return dotProduct / (magnitudeA * magnitudeB);
 }
 
 function findMostSimilarNote(
@@ -104,6 +107,13 @@ function findMostSimilarNote(
   }
 
   let bestNote = candidates[0];
+
+  if (!bestNote) {
+    throw new Error("没有找到任何可召回的历史笔记");
+  }
+
+
+
   let bestSimilarity = cosineSimilarity(
     newNote.embedding,
     bestNote.embedding!,
@@ -159,8 +169,8 @@ async function processNewNote(
   }
 
   console.log("模式卡片生成完成。");
-  console.log("正在生成向量……");
-
+  console.log("正在生成向量……"); 
+  
   try {
     newNote.embedding = await createEmbedding(
       newNote.embeddingText,
