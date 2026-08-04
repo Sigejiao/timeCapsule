@@ -6,6 +6,11 @@ import { stdin, stdout } from "node:process";
 import { analyzePattern } from "./ai/analyze-pattern.ts";
 import { createEmbedding } from "./ai/create-embedding.ts";
 
+import { asc,  eq } from "drizzle-orm";
+
+import { db } from "./db/client.ts";
+import { notes as notesTable } from "./db/schema.ts";
+
 import type {
   Encounter,
   Note,
@@ -26,6 +31,40 @@ async function readJson<T>(
     return fallback;
   }
 }
+
+const currentUserId = "demo";
+
+async function readNotesFromDatabase(): Promise<Note[]> {
+  const rows = await db
+    .select({
+      id: notesTable.id,
+      content: notesTable.content,
+      createdAt: notesTable.createdAt,
+      status: notesTable.status,
+      patternCard: notesTable.patternCard,
+      embedding: notesTable.embedding,
+    })
+    .from(notesTable)
+    .where(eq(notesTable.userId, currentUserId))
+    .orderBy(asc(notesTable.createdAt));
+
+  return rows.map((row) => ({
+    id: row.id,
+    content: row.content,
+    createdAt: row.createdAt.toISOString(),
+    status: row.status,
+
+    ...(row.patternCard !== null
+      ? { patternCard: row.patternCard }
+      : {}),
+
+    ...(row.embedding !== null
+      ? { embedding: row.embedding }
+      : {}),
+  }));
+}
+
+
 
 async function writeJson<T>(
   file: URL,
