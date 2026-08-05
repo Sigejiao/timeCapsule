@@ -5,13 +5,15 @@ import { stdin, stdout } from "node:process";
 import { analyzePattern } from "./ai/analyze-pattern.ts";
 import { createEmbedding } from "./ai/create-embedding.ts";
 
-import { asc,  eq, and } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 
 import { db } from "./db/client.ts";
 import { 
   notes as notesTable,
   encounters as encountersTable
 } from "./db/schema.ts";
+
+import { readEncountersByUserId, readNotesByUserId } from "./db/queries.ts";
 
 import type {
   Encounter,
@@ -25,61 +27,6 @@ import type {
 
 const currentUserId = "demo";
 
-async function readNotesFromDatabase(): Promise<Note[]> {
-  const rows = await db
-    .select({
-      id: notesTable.id,
-      content: notesTable.content,
-      createdAt: notesTable.createdAt,
-      status: notesTable.status,
-      patternCard: notesTable.patternCard,
-      embedding: notesTable.embedding,
-    })
-    .from(notesTable)
-    .where(eq(notesTable.userId, currentUserId))
-    .orderBy(asc(notesTable.createdAt));
-
-  return rows.map((row) => ({
-    id: row.id,
-    content: row.content,
-    createdAt: row.createdAt.toISOString(),
-    status: row.status,
-
-    ...(row.patternCard !== null
-      ? { patternCard: row.patternCard }
-      : {}),
-
-    ...(row.embedding !== null
-      ? { embedding: row.embedding }
-      : {}),
-  }));
-}
-
-async function readEncountersFromDatabase(): Promise<Encounter[]> {
-  const rows = await db
-    .select({
-      id: encountersTable.id,
-      newNoteId: encountersTable.newNoteId,
-      oldNoteId: encountersTable.oldNoteId,
-      similarity: encountersTable.similarity,
-      selectionMethod: encountersTable.selectionMethod,
-      shownAt: encountersTable.shownAt,
-      feedback: encountersTable.feedback,
-    })
-    .from(encountersTable)
-    .where(eq(encountersTable.userId, currentUserId))
-    .orderBy(asc(encountersTable.shownAt));
-
-  return rows.map((row) => ({
-    id: row.id,
-    newNoteId: row.newNoteId,
-    oldNoteId: row.oldNoteId,
-    similarity: row.similarity,
-    selectionMethod: row.selectionMethod,
-    shownAt: row.shownAt.toISOString(),
-    feedback: row.feedback,
-  }));
-}
 
 async function insertNoteIntoDatabase(
   note: Note,
@@ -353,9 +300,9 @@ async function showNotes(notes: Note[]): Promise<void> {
 }
 
 async function main(): Promise<void> {
-  const notes = await readNotesFromDatabase();
+  const notes = await readNotesByUserId(currentUserId);
 
-  const encounters = await readEncountersFromDatabase();
+  const encounters = await readEncountersByUserId(currentUserId);
 
   const readline = createInterface({
     input: stdin,
@@ -422,8 +369,9 @@ async function main(): Promise<void> {
 
 main().catch((error) => {
   console.error("\n程序启动失败：");
-  console.error(
-    error instanceof Error ? error.message : error,
-  );
+
+  // console.dir(error, {depth: null,  });
+  console.error(error instanceof Error ? error.message : error,);
+  
   process.exit(1);
 });
