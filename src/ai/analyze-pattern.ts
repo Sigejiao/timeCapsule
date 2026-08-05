@@ -43,7 +43,7 @@ export async function analyzePattern(
   "recurringPattern": "可能反复出现的行为或思维模式",
   "thinkingTension": "内在冲突、思维张力",
   "motivationNeed": "深层需要",
-  "keywords": ["关键词1", "关键词2", "关键词3“]
+  "keywords": ["关键词1", "关键词2", "关键词3"]
 }
 
 不要输出Markdown代码块，也不要输出JSON以外的解释。

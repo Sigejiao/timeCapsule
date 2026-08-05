@@ -1,10 +1,19 @@
 import { randomUUID } from "node:crypto";
-import { readFile, writeFile } from "node:fs/promises";
 import { createInterface } from "node:readline/promises";
 import { stdin, stdout } from "node:process";
 
 import { analyzePattern } from "./ai/analyze-pattern.ts";
 import { createEmbedding } from "./ai/create-embedding.ts";
+
+import { eq, and } from "drizzle-orm";
+
+import { db } from "./db/client.ts";
+import { 
+  notes as notesTable,
+  encounters as encountersTable
+} from "./db/schema.ts";
+
+import { readEncountersByUserId, readNotesByUserId } from "./db/queries.ts";
 
 import type {
   Encounter,
@@ -12,47 +21,81 @@ import type {
   PatternCard,
 } from "./types.ts";
 
-const notesFile = new URL("../data/notes.json", import.meta.url);
-const encountersFile = new URL(
-  "../data/encounters.json",
-  import.meta.url,
-);
 
-async function readJson<T>(
-  file: URL,
-  fallback: T,
-): Promise<T> {
-  try {
-    const content = await readFile(file, "utf-8");
-    return JSON.parse(content) as T;
-  } catch {
-    return fallback;
+
+
+
+const currentUserId = "demo";
+
+
+async function insertNoteIntoDatabase(
+  note: Note,
+): Promise<void> {
+  await db.insert(notesTable).values({
+    id: note.id,
+    userId: currentUserId,
+    content: note.content,
+    createdAt: new Date(note.createdAt),
+    status: note.status,
+  });   
+}
+
+async function insertEncounterIntoDatabase(
+  encounter: Encounter,
+): Promise<void> {
+  await db.insert(encountersTable).values({
+    id: encounter.id,
+    userId: currentUserId,
+    newNoteId: encounter.newNoteId,
+    oldNoteId: encounter.oldNoteId,
+    similarity: encounter.similarity,
+    selectionMethod: encounter.selectionMethod,
+    shownAt: new Date(encounter.shownAt),
+    feedback: encounter.feedback ?? null,
+  });
+}
+
+async function updateNoteInDatabase(
+  note: Note,
+): Promise<void> {
+  const [ updatedNote ] = await db
+    .update(notesTable)
+    .set({
+      status: note.status,
+      patternCard: note.patternCard ?? null,
+      embedding: note.embedding ?? null,
+      updatedAt: new Date(),
+    })
+    .where(
+      and(
+        eq(notesTable.id, note.id),
+        eq(notesTable.userId, currentUserId),
+      ),
+    )
+    .returning({
+      id: notesTable.id,
+    });
+    
+  if (!updatedNote) {
+    throw new Error(
+      `未找到要更新的笔记: ${note.id}`,
+    );  
   }
 }
 
-async function writeJson<T>(
-  file: URL,
-  data: T,
-): Promise<void> {
-  await writeFile(
-    file,
-    JSON.stringify(data, null, 2),
-    "utf-8",
-  );
-}
+
 
 function createEmbeddingText(
   card: PatternCard,
 ): string {
   return [
     `情景：${card.situation}`,
-    `模式：${card.pattern}`,
+    `模式：${card.recurringPattern}`,
     `思维张力：${card.thinkingTension}`,
     `动机需求：${card.motivationNeed}`,
     `关键词：${card.keywords.join("、")}`,
   ].join("\n");
 }
-
 function cosineSimilarity(
   vectorA: number[],
   vectorB: number[],
@@ -66,19 +109,26 @@ function cosineSimilarity(
   let lengthB = 0;
 
   for (let i = 0; i < vectorA.length; i++) {
-    dotProduct += vectorA[i] * vectorB[i];
-    lengthA += vectorA[i] * vectorA[i];
-    lengthB += vectorB[i] * vectorB[i];
+    const valueA = vectorA[i];
+    const valueB = vectorB[i];
+
+    if (valueA === undefined || valueB === undefined) {
+      throw new Error(`向量在第 ${i} 个位置缺少数值`);
+    }
+
+    dotProduct += valueA * valueB;
+    lengthA += valueA * valueA;
+    lengthB += valueB * valueB;
   }
 
-  const denominator =
-    Math.sqrt(lengthA) * Math.sqrt(lengthB);
+  const magnitudeA = Math.sqrt(lengthA);
+  const magnitudeB = Math.sqrt(lengthB);
 
-  if (denominator === 0) {
+  if (magnitudeA === 0 || magnitudeB === 0) {
     return 0;
   }
 
-  return dotProduct / denominator;
+  return dotProduct / (magnitudeA * magnitudeB);
 }
 
 function findMostSimilarNote(
@@ -104,6 +154,13 @@ function findMostSimilarNote(
   }
 
   let bestNote = candidates[0];
+
+  if (!bestNote) {
+    throw new Error("没有找到任何可召回的历史笔记");
+  }
+
+
+
   let bestSimilarity = cosineSimilarity(
     newNote.embedding,
     bestNote.embedding!,
@@ -139,10 +196,12 @@ async function processNewNote(
     status: "pending",
   };
 
-  notes.push(newNote);
 
   // 先保存原文，防止后面的 API 调用失败导致内容丢失。
-  await writeJson(notesFile, notes);
+  await insertNoteIntoDatabase(newNote);
+
+  // 同步到内存
+  notes.push(newNote);
 
   console.log("\n原始笔记已保存。");
   console.log("正在生成模式卡片……");
@@ -154,25 +213,26 @@ async function processNewNote(
     );
   } catch (error) {
     newNote.status = "analysis_failed";
-    await writeJson(notesFile, notes);
+    await updateNoteInDatabase(newNote);
     throw error;
   }
 
   console.log("模式卡片生成完成。");
-  console.log("正在生成向量……");
-
+  console.log("正在生成向量……"); 
+  
   try {
     newNote.embedding = await createEmbedding(
       newNote.embeddingText,
     );
-    newNote.status = "ready";
-    await writeJson(notesFile, notes);
   } catch (error) {
     newNote.status = "embedding_failed";
-    await writeJson(notesFile, notes);
+    await updateNoteInDatabase(newNote);
     throw error;
   }
 
+    newNote.status = "ready";
+    await updateNoteInDatabase(newNote);
+  
   console.log("向量生成完成。");
 
   console.log("\n模式卡片：");
@@ -203,12 +263,9 @@ async function processNewNote(
     feedback: null,
   };
 
-  encounters.push(encounter);
+  await insertEncounterIntoDatabase(encounter);
 
-  await Promise.all([
-    writeJson(notesFile, notes),
-    writeJson(encountersFile, encounters),
-  ]);
+  encounters.push(encounter);
 
   console.log("\n找到了一条与你当前状态相呼应的旧笔记：");
   console.log("--------------------------------");
@@ -220,7 +277,7 @@ async function processNewNote(
 
   if (match.note.patternCard) {
     console.log("\n旧笔记的模式：");
-    console.log(match.note.patternCard.pattern);
+    console.log(match.note.patternCard.recurringPattern);
   }
 }
 
@@ -237,21 +294,15 @@ async function showNotes(notes: Note[]): Promise<void> {
     console.log(`状态：${note.status}`);
 
     if (note.patternCard) {
-      console.log(`模式：${note.patternCard.pattern}`);
+      console.log(`模式：${note.patternCard.recurringPattern}`);
     }
   });
 }
 
 async function main(): Promise<void> {
-  const notes = await readJson<Note[]>(
-    notesFile,
-    [],
-  );
+  const notes = await readNotesByUserId(currentUserId);
 
-  const encounters = await readJson<Encounter[]>(
-    encountersFile,
-    [],
-  );
+  const encounters = await readEncountersByUserId(currentUserId);
 
   const readline = createInterface({
     input: stdin,
@@ -318,8 +369,9 @@ async function main(): Promise<void> {
 
 main().catch((error) => {
   console.error("\n程序启动失败：");
-  console.error(
-    error instanceof Error ? error.message : error,
-  );
+
+  // console.dir(error, {depth: null,  });
+  console.error(error instanceof Error ? error.message : error,);
+  
   process.exit(1);
 });

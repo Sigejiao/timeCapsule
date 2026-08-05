@@ -6,7 +6,7 @@ export type NoteStatus =
 
 export interface PatternCard {
   situation: string;
-  pattern: string;
+  recurringPattern: string;
   thinkingTension: string;
   motivationNeed: string;
   keywords: string[];
