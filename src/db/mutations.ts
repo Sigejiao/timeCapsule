@@ -12,7 +12,7 @@ import type {
 } from "../types.ts";
 
 
-export async function insertNotes(
+export async function insertNote(
     userId: string,
     note: Note,
 ): Promise<void> {
