@@ -45,6 +45,6 @@ app.get(
 
 app.listen(port, () => {
     console.log(
-        '时间胶囊 API 已启动：http://localhost:${port}',
+        `时间胶囊 API 已启动：http://localhost:${port}`,
     );
 });
