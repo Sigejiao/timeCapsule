@@ -36,7 +36,7 @@ function toNoteDto(note: Note): NoteDto { // 重整格式
 export async function POST(
     request: Request,
 ): Promise<
-    NextResponse< CreateNoteRequestSchema |  ErrorResponse>
+    NextResponse< CreateNoteResponse |  ErrorResponse>
 > {
     const body: unknown = await request
         .json()

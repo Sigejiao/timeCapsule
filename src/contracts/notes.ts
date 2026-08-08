@@ -11,7 +11,7 @@ export const createNoteRequestSchema = z.object({
         .string()
         .trim()
         .min(1,"笔记内容不能为空")
-        .max(50000, "笔记不能超过5000字")
+        .max(5000, "笔记不能超过5000字")
 });
 
 export type CreateNoteRequest = z.infer<
@@ -26,7 +26,7 @@ export interface NoteDto {
   patternCard: PatternCard | null;
 }
 
-export interface EnocunterDto {
+export interface EncounterDto {
     similarity: number;
     shownAt: string;
 }
@@ -34,7 +34,7 @@ export interface EnocunterDto {
 export interface CreateNoteResponse {
     newNote: NoteDto;
     recalledNote: NoteDto | null;
-    encounter: EnocunterDto | null;
+    encounter: EncounterDto | null;
 }
 
 export interface ErrorResponse {
