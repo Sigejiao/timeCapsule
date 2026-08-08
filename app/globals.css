@@ -1,0 +1,243 @@
+:root {
+  color-scheme: dark;
+  font-family:
+    Inter,
+    "PingFang SC",
+    "Microsoft YaHei",
+    sans-serif;
+  background: #080b12;
+  color: #f4f1e8;
+}
+
+* {
+  box-sizing: border-box; 
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background:
+    radial-gradient(
+      circle at top,
+      #202840 0,
+      #0c111c 38%,
+      #080b12 72%
+    );
+}
+
+button,
+textarea {
+  font: inherit;
+}
+
+.pageShell {
+  width: min(920px, 100%);
+  margin: 0 auto;
+  padding: 72px 24px;
+}
+
+.capsule {
+  display: grid;
+  gap: 28px;
+}
+
+.hero {
+  max-width: 680px;
+}
+
+.eyebrow,
+.cardLabel {
+  margin: 0 0 10px;
+  color: #d6b96f;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+}
+
+.hero h1 {
+  margin: 0;
+  font-size: clamp(42px, 8vw, 76px);
+  line-height: 1;
+}
+
+.subtitle {
+  margin: 20px 0 0;
+  color: #aeb7ca;
+  font-size: 18px;
+  line-height: 1.7;
+}
+
+.noteForm,
+.resultCard,
+.recallCard {
+  border: 1px solid #293249;
+  border-radius: 20px;
+  background: rgba(15, 20, 32, 0.88);
+  box-shadow: 0 22px 60px rgba(0, 0, 0, 0.28);
+}
+
+.noteForm {
+  display: grid;
+  gap: 14px;
+  padding: 24px;
+}
+
+.noteForm label {
+  font-weight: 650;
+}
+
+.noteForm textarea {
+  width: 100%;
+  min-height: 180px;
+  resize: vertical;
+  border: 1px solid #323d56;
+  border-radius: 14px;
+  padding: 16px;
+  outline: none;
+  background: #0a0e17;
+  color: #f4f1e8;
+  line-height: 1.7;
+}
+
+.noteForm textarea:focus {
+  border-color: #d6b96f;
+  box-shadow: 0 0 0 3px rgba(214, 185, 111, 0.12);
+}
+
+.formFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: #7f899e;
+  font-size: 13px;
+}
+
+.formFooter button {
+  border: 0;
+  border-radius: 999px;
+  padding: 11px 20px;
+  background: #d6b96f;
+  color: #17130a;
+  cursor: pointer;
+  font-weight: 750;
+}
+
+.formFooter button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.errorMessage {
+  margin: 0;
+  border: 1px solid #743c48;
+  border-radius: 12px;
+  padding: 14px 16px;
+  background: #321820;
+  color: #ffc4cd;
+}
+
+.resultArea {
+  display: grid;
+  gap: 20px;
+}
+
+.resultCard,
+.recallCard {
+  padding: 26px;
+}
+
+.resultCard h2 {
+  margin: 0 0 24px;
+  font-size: 24px;
+  line-height: 1.45;
+}
+
+.patternGrid {
+  display: grid;
+  grid-template-columns:
+    repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin: 0;
+}
+
+.patternGrid div {
+  border-radius: 12px;
+  padding: 15px;
+  background: #0a0e17;
+}
+
+.patternGrid dt {
+  margin-bottom: 8px;
+  color: #d6b96f;
+  font-size: 13px;
+}
+
+.patternGrid dd {
+  margin: 0;
+  color: #c8cfdd;
+  line-height: 1.65;
+}
+
+.keywords {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 20px;
+}
+
+.keywords span {
+  border: 1px solid #3b465d;
+  border-radius: 999px;
+  padding: 6px 11px;
+  color: #b8c1d2;
+  font-size: 13px;
+}
+
+.recallCard {
+  border-color: #6e5b2e;
+  background:
+    linear-gradient(
+      145deg,
+      rgba(56, 46, 24, 0.84),
+      rgba(18, 22, 32, 0.94)
+    );
+}
+
+.recallCard blockquote {
+  margin: 12px 0 24px;
+  color: #f4ead1;
+  font-size: 21px;
+  line-height: 1.75;
+}
+
+.recallCard footer {
+  display: flex;
+  justify-content: space-between;
+  color: #aeb7ca;
+  font-size: 13px;
+}
+
+.emptyRecall {
+  margin: 0;
+  border: 1px dashed #39445b;
+  border-radius: 16px;
+  padding: 22px;
+  color: #939db1;
+  text-align: center;
+}
+
+@media (max-width: 680px) {
+  .pageShell {
+    padding: 44px 16px;
+  }
+
+  .patternGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .recallCard footer {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 8px;
+  }
+}

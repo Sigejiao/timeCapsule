@@ -18,7 +18,7 @@ import type {
 
 import {
   createEmbeddingText,
-  findMostSImilarNote,
+  findMostSimilarNote,
 } from "./recall.ts";
 
 
@@ -70,7 +70,7 @@ export async function processNewNote(
 
     const notes = await readNotesByUserId(userId);
 
-    const match = findMostSImilarNote(newNote, notes, );
+    const match = findMostSimilarNote(newNote, notes, );
 
     if (!match) {
         return {

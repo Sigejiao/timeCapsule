@@ -69,7 +69,7 @@ export function cosineSimilarity(
 }
 
 
-export function findMostSImilarNote(
+export function findMostSimilarNote(
     newNote: Note,
     notes: Note[],
 ): NoteMatch | null {
