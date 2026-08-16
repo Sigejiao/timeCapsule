@@ -1,28 +1,78 @@
 :root {
-  color-scheme: dark;
+  color-scheme: light;
   font-family:
-    Inter,
-    "PingFang SC",
-    "Microsoft YaHei",
-    sans-serif;
-  background: #080b12;
-  color: #f4f1e8;
+    "Songti SC",
+    "STSong",
+    "Noto Serif CJK SC",
+    "Source Han Serif SC",
+    serif;
+  background: #eee5d3;
+  color: #28251f;
+  --paper: #f8f1e4;
+  --paper-deep: #eee2cc;
+  --ink: #28251f;
+  --ink-soft: #6f6658;
+  --line: rgba(105, 89, 66, 0.22);
+  --cinnabar: #98372e;
+  --cinnabar-deep: #75271f;
 }
 
 * {
-  box-sizing: border-box; 
+  box-sizing: border-box;
+}
+
+html {
+  min-height: 100%;
+  background: #eee5d3;
 }
 
 body {
+  position: relative;
+  isolation: isolate;
   margin: 0;
   min-height: 100vh;
+  overflow-x: hidden;
   background:
     radial-gradient(
-      circle at top,
-      #202840 0,
-      #0c111c 38%,
-      #080b12 72%
+      circle at 16% 8%,
+      rgba(255, 252, 244, 0.82),
+      transparent 32%
+    ),
+    radial-gradient(
+      circle at 86% 74%,
+      rgba(221, 205, 176, 0.34),
+      transparent 38%
+    ),
+    linear-gradient(
+      118deg,
+      #f3ead9 0%,
+      #eee3cf 52%,
+      #f6eedf 100%
     );
+  color: var(--ink);
+}
+
+/* 纯 CSS 纸张纤维纹理 */
+body::before {
+  position: fixed;
+  z-index: -1;
+  inset: 0;
+  background-image:
+    repeating-linear-gradient(
+      8deg,
+      transparent 0 12px,
+      rgba(113, 91, 58, 0.022) 13px,
+      transparent 14px 29px
+    ),
+    repeating-linear-gradient(
+      96deg,
+      transparent 0 20px,
+      rgba(255, 255, 255, 0.12) 21px,
+      transparent 22px 43px
+    );
+  content: "";
+  opacity: 0.72;
+  pointer-events: none;
 }
 
 button,
@@ -34,7 +84,7 @@ textarea {
 .pageShell {
   width: min(920px, 100%);
   margin: 0 auto;
-  padding: 72px 24px;
+  padding: 72px 24px 88px;
 }
 
 .capsule {
@@ -44,97 +94,190 @@ textarea {
 
 .hero {
   max-width: 680px;
+  padding-left: 5px;
 }
 
 .eyebrow,
 .cardLabel {
   margin: 0 0 10px;
-  color: #d6b96f;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.18em;
+  color: var(--cinnabar);
+  font-family:
+    "PingFang SC",
+    "Microsoft YaHei",
+    sans-serif;
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.24em;
 }
 
 .hero h1 {
   margin: 0;
-  font-size: clamp(42px, 8vw, 76px);
-  line-height: 1;
+  font-size: clamp(44px, 8vw, 74px);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  line-height: 1.08;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.72);
 }
 
 .subtitle {
-  margin: 20px 0 0;
-  color: #aeb7ca;
+  margin: 18px 0 0;
+  color: var(--ink-soft);
   font-size: 18px;
-  line-height: 1.7;
+  letter-spacing: 0.08em;
+  line-height: 1.8;
 }
 
 .noteForm,
 .resultCard,
 .recallCard {
-  border: 1px solid #293249;
-  border-radius: 20px;
-  background: rgba(15, 20, 32, 0.88);
-  box-shadow: 0 22px 60px rgba(0, 0, 0, 0.28);
+  position: relative;
+  border: 1px solid rgba(116, 96, 67, 0.18);
+  border-radius: 4px 7px 5px 3px;
+  background:
+    radial-gradient(
+      circle at 22% 18%,
+      rgba(255, 255, 255, 0.72),
+      transparent 36%
+    ),
+    linear-gradient(
+      108deg,
+      rgba(250, 245, 235, 0.98),
+      rgba(244, 235, 219, 0.96)
+    );
+  box-shadow:
+    0 24px 42px rgba(91, 70, 43, 0.14),
+    0 3px 7px rgba(91, 70, 43, 0.11),
+    inset 0 1px 0 rgba(255, 255, 255, 0.75);
+}
+
+.noteForm::after,
+.resultCard::after,
+.recallCard::after {
+  position: absolute;
+  z-index: 0;
+  inset: 7px;
+  border: 1px solid rgba(126, 106, 77, 0.07);
+  content: "";
+  pointer-events: none;
+}
+
+.noteForm > *,
+.resultCard > *,
+.recallCard > * {
+  position: relative;
+  z-index: 1;
 }
 
 .noteForm {
   display: grid;
-  gap: 14px;
-  padding: 24px;
+  gap: 15px;
+  padding: 29px 30px 26px;
 }
 
 .noteForm label {
-  font-weight: 650;
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
 }
 
 .noteForm textarea {
   width: 100%;
-  min-height: 180px;
+  min-height: 190px;
   resize: vertical;
-  border: 1px solid #323d56;
-  border-radius: 14px;
-  padding: 16px;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+  padding: 15px 4px;
   outline: none;
-  background: #0a0e17;
-  color: #f4f1e8;
-  line-height: 1.7;
+  background: transparent;
+  color: var(--ink);
+  caret-color: var(--cinnabar);
+  font-size: 17px;
+  letter-spacing: 0.035em;
+  line-height: 1.9;
+}
+
+.noteForm textarea::placeholder {
+  color: #a69b89;
 }
 
 .noteForm textarea:focus {
-  border-color: #d6b96f;
-  box-shadow: 0 0 0 3px rgba(214, 185, 111, 0.12);
+  border-bottom-color: rgba(152, 55, 46, 0.68);
+  box-shadow: 0 2px 0 rgba(152, 55, 46, 0.08);
 }
 
 .formFooter {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  color: #7f899e;
-  font-size: 13px;
+  color: #978b79;
+  font-family:
+    "PingFang SC",
+    "Microsoft YaHei",
+    sans-serif;
+  font-size: 12px;
 }
 
 .formFooter button {
-  border: 0;
-  border-radius: 999px;
-  padding: 11px 20px;
-  background: #d6b96f;
-  color: #17130a;
+  border: 1px solid rgba(105, 31, 24, 0.58);
+  border-radius: 3px;
+  padding: 11px 22px;
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.08),
+      transparent
+    ),
+    var(--cinnabar);
+  box-shadow:
+    0 6px 12px rgba(94, 38, 30, 0.19),
+    inset 0 1px 0 rgba(255, 255, 255, 0.16);
+  color: #fff8eb;
   cursor: pointer;
-  font-weight: 750;
+  font-family:
+    "Songti SC",
+    "STSong",
+    serif;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  transition:
+    background-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
+}
+
+.formFooter button:hover:not(:disabled) {
+  background-color: var(--cinnabar-deep);
+  box-shadow:
+    0 8px 16px rgba(94, 38, 30, 0.23),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  transform: translateY(-1px);
+}
+
+.formFooter button:focus-visible {
+  outline: 2px solid rgba(152, 55, 46, 0.42);
+  outline-offset: 3px;
+}
+
+.formFooter button:active:not(:disabled) {
+  box-shadow: 0 2px 5px rgba(94, 38, 30, 0.2);
+  transform: translateY(1px);
 }
 
 .formFooter button:disabled {
   cursor: not-allowed;
-  opacity: 0.45;
+  filter: saturate(0.48);
+  opacity: 0.46;
 }
 
 .errorMessage {
   margin: 0;
-  border: 1px solid #743c48;
-  border-radius: 12px;
+  border: 1px solid rgba(143, 53, 43, 0.32);
+  border-radius: 3px;
   padding: 14px 16px;
-  background: #321820;
-  color: #ffc4cd;
+  background: rgba(151, 55, 45, 0.09);
+  color: #7e2b25;
 }
 
 .resultArea {
@@ -144,39 +287,43 @@ textarea {
 
 .resultCard,
 .recallCard {
-  padding: 26px;
+  padding: 30px;
 }
 
 .resultCard h2 {
   margin: 0 0 24px;
   font-size: 24px;
-  line-height: 1.45;
+  font-weight: 600;
+  letter-spacing: 0.035em;
+  line-height: 1.55;
 }
 
 .patternGrid {
   display: grid;
-  grid-template-columns:
-    repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 14px;
   margin: 0;
 }
 
 .patternGrid div {
-  border-radius: 12px;
-  padding: 15px;
-  background: #0a0e17;
+  border: 1px solid rgba(116, 96, 67, 0.14);
+  border-radius: 2px;
+  padding: 16px;
+  background: rgba(239, 228, 208, 0.46);
 }
 
 .patternGrid dt {
   margin-bottom: 8px;
-  color: #d6b96f;
+  color: var(--cinnabar);
   font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
 }
 
 .patternGrid dd {
   margin: 0;
-  color: #c8cfdd;
-  line-height: 1.65;
+  color: #5f574b;
+  line-height: 1.72;
 }
 
 .keywords {
@@ -187,49 +334,73 @@ textarea {
 }
 
 .keywords span {
-  border: 1px solid #3b465d;
+  border: 1px solid rgba(118, 96, 67, 0.28);
   border-radius: 999px;
-  padding: 6px 11px;
-  color: #b8c1d2;
+  padding: 6px 12px;
+  background: rgba(255, 252, 245, 0.38);
+  color: #6a6052;
   font-size: 13px;
 }
 
 .recallCard {
-  border-color: #6e5b2e;
+  border-color: rgba(138, 91, 55, 0.26);
   background:
+    radial-gradient(
+      circle at 78% 22%,
+      rgba(255, 255, 255, 0.6),
+      transparent 34%
+    ),
     linear-gradient(
       145deg,
-      rgba(56, 46, 24, 0.84),
-      rgba(18, 22, 32, 0.94)
+      rgba(239, 224, 197, 0.98),
+      rgba(249, 241, 226, 0.98)
     );
 }
 
 .recallCard blockquote {
-  margin: 12px 0 24px;
-  color: #f4ead1;
+  margin: 14px 0 26px;
+  color: #383129;
   font-size: 21px;
-  line-height: 1.75;
+  letter-spacing: 0.035em;
+  line-height: 1.85;
 }
 
 .recallCard footer {
   display: flex;
   justify-content: space-between;
-  color: #aeb7ca;
+  border-top: 1px solid var(--line);
+  padding-top: 14px;
+  color: #837665;
   font-size: 13px;
 }
 
 .emptyRecall {
   margin: 0;
-  border: 1px dashed #39445b;
-  border-radius: 16px;
+  border: 1px dashed rgba(119, 99, 71, 0.42);
+  border-radius: 3px;
   padding: 22px;
-  color: #939db1;
+  background: rgba(248, 241, 227, 0.42);
+  color: #887d6c;
   text-align: center;
 }
 
 @media (max-width: 680px) {
   .pageShell {
-    padding: 44px 16px;
+    padding: 44px 16px 60px;
+  }
+
+  .hero h1 {
+    letter-spacing: 0.05em;
+  }
+
+  .subtitle {
+    font-size: 16px;
+  }
+
+  .noteForm,
+  .resultCard,
+  .recallCard {
+    padding: 22px 20px;
   }
 
   .patternGrid {
@@ -240,6 +411,12 @@ textarea {
     align-items: flex-start;
     flex-direction: column;
     gap: 8px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .formFooter button {
+    transition: none;
   }
 }
 
