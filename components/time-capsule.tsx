@@ -142,7 +142,7 @@ export function TimeCapsule() {
           {errorMessage}
         </p>
       )}
-
+  
       {result && (
         <div
           className="resultArea"

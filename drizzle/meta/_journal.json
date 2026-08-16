@@ -15,6 +15,13 @@
       "when": 1785824773487,
       "tag": "0001_narrow_tony_stark",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1786346768300,
+      "tag": "0002_nappy_warlock",
+      "breakpoints": true
     }
   ]
 }
