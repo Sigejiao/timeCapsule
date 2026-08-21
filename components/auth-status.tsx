@@ -1,7 +1,9 @@
 "use client";
 
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import {
+  useRouter,
+} from "next/navigation";
+
 import {
   useState,
 } from "react";
@@ -10,13 +12,16 @@ import {
   authClient,
 } from "../src/auth-client.ts";
 
-export function AuthStatus() {
-  const router = useRouter();
+interface AuthStatusProps {
+  name: string;
+  email: string;
+}
 
-  const {
-    data: session,
-    isPending,
-  } = authClient.useSession();
+export function AuthStatus({
+  name,
+  email,
+}: AuthStatusProps) {
+  const router = useRouter();
 
   const [isSigningOut, setIsSigningOut] =
     useState(false);
@@ -24,44 +29,20 @@ export function AuthStatus() {
   async function handleSignOut(): Promise<void> {
     setIsSigningOut(true);
 
+    try {
     await authClient.signOut();
+
+      router.replace("/sign-in");
     router.refresh();
+    } finally {
     setIsSigningOut(false);
   }
-
-  if (isPending) {
-    return (
-      <div className="authStatus">
-        <span>正在确认登录状态……</span>
-      </div>
-    );
-  }
-
-  if (!session) {
-    return (
-      <nav
-        className="authStatus"
-        aria-label="账号"
-      >
-        <Link href="/sign-in">
-          登录
-        </Link>
-
-        <Link
-          className="authPrimaryLink"
-          href="/sign-up"
-        >
-          注册
-        </Link>
-      </nav>
-    );
   }
 
   return (
     <div className="authStatus">
       <span>
-        {session.user.name ||
-          session.user.email}
+        {name || email}
       </span>
 
       <button

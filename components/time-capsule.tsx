@@ -35,7 +35,7 @@ export function TimeCapsule() {
 
     setErrorMessage(null);
     setResult(null);
-    setIsSubmitting(true); 
+    setIsSubmitting(true); // 保留意见
 
     try {
       const response = await fetch(

@@ -19,18 +19,23 @@ import{
  
 export default async function HomePage() {
   const session = 
-    auth.api.getSession({
+    await auth.api.getSession({
       headers: await headers(),
     });
 
   if (!session){
-    redirect("/sign-in ")
+    redirect("/sign-in")
   }
 
   return (
     <main className="pageShell">
-      <AuthStatus />
-      <TimeCapsule />
+      <AuthStatus 
+        name={session.user.name}
+        email={session.user.email}
+      />
+      <TimeCapsule 
+        userId={session.user.id}
+      />
     </main>
   );
 }
