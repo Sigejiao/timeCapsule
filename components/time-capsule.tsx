@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  useEffect,
   useState,
 } from "react";
 
@@ -12,8 +13,20 @@ import type {
   CreateNoteResponse,
   ErrorResponse,
 } from "../src/contracts/notes.ts";
+import { useRouter } from "next/navigation";
+import next from "next";
 
-export function TimeCapsule() {
+interface TimeCapsuleProps {
+  userId: string;
+}
+
+export function TimeCapsule({
+  userId
+}:TimeCapsuleProps) {
+  const router = useRouter();
+
+  const draftKey = `timecapsule:draft:${userId}`;
+
   const [content, setContent] =
     useState("");
 
@@ -27,6 +40,14 @@ export function TimeCapsule() {
 
   const [isSubmitting, setIsSubmitting] =
     useState(false);
+
+  useEffect(()=>{
+    const savedDraft = localStorage.getItem(draftKey);
+
+    if (savedDraft !== null) {
+      setContent(savedDraft);
+    }
+  }, [draftKey])
 
   async function handleSubmit(
     event: FormEvent<HTMLFormElement>,
@@ -52,6 +73,18 @@ export function TimeCapsule() {
         },
       );
 
+      if (response.status === 401) {
+        localStorage.setItem(
+          draftKey,
+          content,
+        );
+
+        router.replace("/sign-in");
+        router.refresh();
+
+        return;
+      }
+
       const responseBody =
         (await response.json()) as //json to javasctipt
           | CreateNoteResponse
@@ -70,7 +103,13 @@ export function TimeCapsule() {
       }
 
       setResult(responseBody);
+
+      localStorage.removeItem(
+        draftKey
+      );
+
       setContent("");
+
     } catch (error) {
       setErrorMessage(
         error instanceof Error
@@ -111,7 +150,17 @@ export function TimeCapsule() {
           maxLength={5000}
           placeholder="写下你的经历、困惑、判断或感受……"
           onChange={(event) => {
-            setContent(event.target.value);
+            const nextContent = event.target.value;
+            setContent(nextContent);            
+          
+            if (nextContent.length == 0){
+              localStorage.removeItem(draftKey,);
+            } else {
+              localStorage.setItem(
+                draftKey,
+                nextContent,
+              );
+            }
           }}
         />
 
@@ -142,7 +191,7 @@ export function TimeCapsule() {
           {errorMessage}
         </p>
       )}
-
+  
       {result && (
         <div
           className="resultArea"
