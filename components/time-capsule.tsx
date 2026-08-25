@@ -197,62 +197,7 @@ export function TimeCapsule({
           className="resultArea"
           aria-live="polite"
         >
-          {result.newNote.patternCard && (
-            <article className="resultCard">
-              <p className="cardLabel">
-                这次记录呈现出的模式
-              </p>
-
-              <h2>
-                {
-                  result.newNote.patternCard
-                    .recurringPattern
-                }
-              </h2>
-
-              <dl className="patternGrid">
-                <div>
-                  <dt>情景</dt>
-                  <dd>
-                    {
-                      result.newNote.patternCard
-                        .situation
-                    }
-                  </dd>
-                </div>
-
-                <div>
-                  <dt>思维张力</dt>
-                  <dd>
-                    {
-                      result.newNote.patternCard
-                        .thinkingTension
-                    }
-                  </dd>
-                </div>
-
-                <div>
-                  <dt>动机需求</dt>
-                  <dd>
-                    {
-                      result.newNote.patternCard
-                        .motivationNeed
-                    }
-                  </dd>
-                </div>
-              </dl>
-
-              <div className="keywords">
-                {result.newNote.patternCard
-                  .keywords.map((keyword) => (
-                    <span key={keyword}>
-                      {keyword}
-                    </span>
-                  ))}
-              </div>
-            </article>
-          )}
-
+          
           {result.recalledNote &&
           result.encounter ? (
             <article className="recallCard">
