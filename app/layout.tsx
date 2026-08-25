@@ -6,6 +6,11 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "时间胶囊",
   description: "让过去的记录在合适的时候重新出现",
+
+  icons: {
+    icon: "/time-capsule-icon.png",
+    apple: "/time-capsule-icon.png",
+  },
 };
 
 interface RootLayoutProps {
