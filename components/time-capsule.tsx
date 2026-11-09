@@ -2,8 +2,9 @@
 
 import {
   useEffect,
-  useState,
+  useLayoutEffect,
   useRef,
+  useState,
 } from "react";
 import type {
   FormEvent,
@@ -13,7 +14,6 @@ import type {
   ErrorResponse,
 } from "../src/contracts/notes.ts";
 import { useRouter } from "next/navigation";
-import next from "next";
 
 interface TimeCapsuleProps {
   userId: string;
@@ -32,9 +32,16 @@ export function TimeCapsule({
   const [isFocusMode, setIsFocusMode] =
     useState(false);
 
-  const hasEnteredFocusMode = 
-    useRef(false);
+  const [
+    hasEnteredFocusMode,
+    setHasEnteredFocusMode,
+  ] = useState(false);
 
+  const formRef =
+    useRef<HTMLFormElement>(null);
+
+  const transitionStartRectRef =
+    useRef<DOMRect | null>(null);
 
   const [result, setResult] =
     useState<CreateNoteResponse | null>(
@@ -46,6 +53,26 @@ export function TimeCapsule({
 
   const [isSubmitting, setIsSubmitting] =
     useState(false);
+
+  function rememberFormRect(): void {
+    const form = formRef.current;
+
+    if (form) {
+      transitionStartRectRef.current =
+        form.getBoundingClientRect();
+    }
+  }
+
+  function enterFocusMode(): void {
+    rememberFormRect();
+    setHasEnteredFocusMode(true);
+    setIsFocusMode(true);
+  }
+
+  function exitFocusMode(): void {
+    rememberFormRect();
+    setIsFocusMode(false);
+  }
 
   useEffect(()=>{
     const savedDraft = localStorage.getItem(draftKey);
@@ -60,18 +87,17 @@ export function TimeCapsule({
       Array.from(content.trim()).length;
 
     if (characterCount === 0) {
-      hasEnteredFocusMode.current = false;
+      setHasEnteredFocusMode(false);
       return;
     }
 
     if (
       characterCount > 5 &&
-      !hasEnteredFocusMode.current
+      !hasEnteredFocusMode
     ) {
-      hasEnteredFocusMode.current = true;
-      setIsFocusMode(true);
+      enterFocusMode();
     }
-  }, [content]);
+  }, [content, hasEnteredFocusMode]);
 
   useEffect(() => {
     if (!isFocusMode) {
@@ -87,7 +113,7 @@ export function TimeCapsule({
       event: KeyboardEvent,
     ): void {
       if (event.key === "Escape") {
-        setIsFocusMode(false);
+        exitFocusMode();
       }
     }
 
@@ -104,6 +130,71 @@ export function TimeCapsule({
         "keydown",
         handleKeyDown,
       );
+    };
+  }, [isFocusMode]);
+
+  useLayoutEffect(() => {
+    const form = formRef.current;
+    const startRect =
+      transitionStartRectRef.current;
+
+    if (!form || !startRect) {
+      return;
+    }
+
+    const endRect =
+      form.getBoundingClientRect();
+
+    transitionStartRectRef.current = null;
+
+    if (
+      window.matchMedia(
+        "(prefers-reduced-motion: reduce)",
+      ).matches
+    ) {
+      return;
+    }
+
+    const translateX =
+      startRect.left - endRect.left;
+
+    const translateY =
+      startRect.top - endRect.top;
+
+    const scaleX =
+      startRect.width / endRect.width;
+
+    const scaleY =
+      startRect.height / endRect.height;
+
+    const animation = form.animate(
+      [
+        {
+          transformOrigin: "top left",
+          transform:
+            `translate(${translateX}px, ${translateY}px) ` +
+            `scale(${scaleX}, ${scaleY})`,
+          borderRadius:
+            isFocusMode ? "6px" : "0px",
+        },
+        {
+          transformOrigin: "top left",
+          transform:
+            "translate(0, 0) scale(1, 1)",
+          borderRadius:
+            isFocusMode ? "0px" : "6px",
+        },
+      ],
+      {
+        duration: isFocusMode ? 420 : 320,
+        easing:
+          "cubic-bezier(0.22, 1, 0.36, 1)",
+        fill: "both",
+      },
+    );
+
+    return () => {
+      animation.cancel();
     };
   }, [isFocusMode]);
 
@@ -167,8 +258,8 @@ export function TimeCapsule({
       );
 
       setContent("");
-      setIsFocusMode(false);
-      hasEnteredFocusMode.current = false; 
+      exitFocusMode();
+      setHasEnteredFocusMode(false); 
 
 
     } catch (error) {
@@ -197,6 +288,7 @@ export function TimeCapsule({
       </header>
 
       <form
+        ref={formRef}
         className={
           isFocusMode
             ? "noteForm noteFormFocus"
@@ -229,15 +321,20 @@ export function TimeCapsule({
           }}
         />
 
-        {isFocusMode && (
+        {(isFocusMode ||
+          hasEnteredFocusMode) && (
           <button
             className="focusExitButton"
             type="button"
-            onClick={() => {
-              setIsFocusMode(false);
-            }}
+            onClick={
+              isFocusMode
+                ? exitFocusMode
+                : enterFocusMode
+            }
           >
-            退出
+            {isFocusMode
+              ? "退出"
+              : "进入全屏模式"}
           </button>
         )}
 
