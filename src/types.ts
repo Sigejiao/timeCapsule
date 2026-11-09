@@ -25,6 +25,7 @@ export interface Note {
   lastShownAt?: string;
 }
 
+
 export interface Encounter {
   id: string;
   newNoteId: string;

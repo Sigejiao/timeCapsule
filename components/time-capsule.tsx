@@ -2,19 +2,18 @@
 
 import {
   useEffect,
+  useLayoutEffect,
+  useRef,
   useState,
 } from "react";
-
 import type {
   FormEvent,
 } from "react";
-
 import type {
   CreateNoteResponse,
   ErrorResponse,
 } from "../src/contracts/notes.ts";
 import { useRouter } from "next/navigation";
-import next from "next";
 
 interface TimeCapsuleProps {
   userId: string;
@@ -30,6 +29,20 @@ export function TimeCapsule({
   const [content, setContent] =
     useState("");
 
+  const [isFocusMode, setIsFocusMode] =
+    useState(false);
+
+  const [
+    hasEnteredFocusMode,
+    setHasEnteredFocusMode,
+  ] = useState(false);
+
+  const formRef =
+    useRef<HTMLFormElement>(null);
+
+  const transitionStartRectRef =
+    useRef<DOMRect | null>(null);
+
   const [result, setResult] =
     useState<CreateNoteResponse | null>(
       null,
@@ -41,6 +54,26 @@ export function TimeCapsule({
   const [isSubmitting, setIsSubmitting] =
     useState(false);
 
+  function rememberFormRect(): void {
+    const form = formRef.current;
+
+    if (form) {
+      transitionStartRectRef.current =
+        form.getBoundingClientRect();
+    }
+  }
+
+  function enterFocusMode(): void {
+    rememberFormRect();
+    setHasEnteredFocusMode(true);
+    setIsFocusMode(true);
+  }
+
+  function exitFocusMode(): void {
+    rememberFormRect();
+    setIsFocusMode(false);
+  }
+
   useEffect(()=>{
     const savedDraft = localStorage.getItem(draftKey);
 
@@ -49,6 +82,122 @@ export function TimeCapsule({
     }
   }, [draftKey])
 
+  useEffect(() => {
+    const characterCount =
+      Array.from(content.trim()).length;
+
+    if (characterCount === 0) {
+      setHasEnteredFocusMode(false);
+      return;
+    }
+
+    if (
+      characterCount > 5 &&
+      !hasEnteredFocusMode
+    ) {
+      enterFocusMode();
+    }
+  }, [content, hasEnteredFocusMode]);
+
+  useEffect(() => {
+    if (!isFocusMode) {
+      return;
+    }
+
+    const previousOverflow =
+      document.body.style.overflow;
+
+    document.body.style.overflow = "hidden";
+
+    function handleKeyDown(
+      event: KeyboardEvent,
+    ): void {
+      if (event.key === "Escape") {
+        exitFocusMode();
+      }
+    }
+
+    window.addEventListener(
+      "keydown",
+      handleKeyDown,
+    );
+
+    return () => {
+      document.body.style.overflow =
+        previousOverflow;
+
+      window.removeEventListener(
+        "keydown",
+        handleKeyDown,
+      );
+    };
+  }, [isFocusMode]);
+
+  useLayoutEffect(() => {
+    const form = formRef.current;
+    const startRect =
+      transitionStartRectRef.current;
+
+    if (!form || !startRect) {
+      return;
+    }
+
+    const endRect =
+      form.getBoundingClientRect();
+
+    transitionStartRectRef.current = null;
+
+    if (
+      window.matchMedia(
+        "(prefers-reduced-motion: reduce)",
+      ).matches
+    ) {
+      return;
+    }
+
+    const translateX =
+      startRect.left - endRect.left;
+
+    const translateY =
+      startRect.top - endRect.top;
+
+    const scaleX =
+      startRect.width / endRect.width;
+
+    const scaleY =
+      startRect.height / endRect.height;
+
+    const animation = form.animate(
+      [
+        {
+          transformOrigin: "top left",
+          transform:
+            `translate(${translateX}px, ${translateY}px) ` +
+            `scale(${scaleX}, ${scaleY})`,
+          borderRadius:
+            isFocusMode ? "6px" : "0px",
+        },
+        {
+          transformOrigin: "top left",
+          transform:
+            "translate(0, 0) scale(1, 1)",
+          borderRadius:
+            isFocusMode ? "0px" : "6px",
+        },
+      ],
+      {
+        duration: isFocusMode ? 420 : 320,
+        easing:
+          "cubic-bezier(0.22, 1, 0.36, 1)",
+        fill: "both",
+      },
+    );
+
+    return () => {
+      animation.cancel();
+    };
+  }, [isFocusMode]);
+
   async function handleSubmit(
     event: FormEvent<HTMLFormElement>,
   ): Promise<void> {
@@ -56,7 +205,7 @@ export function TimeCapsule({
 
     setErrorMessage(null);
     setResult(null);
-    setIsSubmitting(true); // 保留意见
+    setIsSubmitting(true); 
 
     try {
       const response = await fetch(
@@ -109,6 +258,9 @@ export function TimeCapsule({
       );
 
       setContent("");
+      exitFocusMode();
+      setHasEnteredFocusMode(false); 
+
 
     } catch (error) {
       setErrorMessage(
@@ -136,7 +288,12 @@ export function TimeCapsule({
       </header>
 
       <form
-        className="noteForm"
+        ref={formRef}
+        className={
+          isFocusMode
+            ? "noteForm noteFormFocus"
+            : "noteForm"
+        }
         onSubmit={handleSubmit}
       >
         <label htmlFor="content">
@@ -163,6 +320,23 @@ export function TimeCapsule({
             }
           }}
         />
+
+        {(isFocusMode ||
+          hasEnteredFocusMode) && (
+          <button
+            className="focusExitButton"
+            type="button"
+            onClick={
+              isFocusMode
+                ? exitFocusMode
+                : enterFocusMode
+            }
+          >
+            {isFocusMode
+              ? "退出"
+              : "进入全屏模式"}
+          </button>
+        )}
 
         <div className="formFooter">
           <span>
