@@ -178,6 +178,18 @@ textarea {
   font-size: 17px;
   font-weight: 600;
   letter-spacing: 0.06em;
+  opacity: 1;
+  transform: translateY(0);
+  transition:
+    opacity 180ms ease,
+    transform 180ms ease;
+}
+
+.noteFormFocus label {
+  opacity: 0;
+  transform: translateY(-4px);
+  pointer-events: none;
+  transition-delay: 120ms;
 }
 
 .noteForm textarea {
