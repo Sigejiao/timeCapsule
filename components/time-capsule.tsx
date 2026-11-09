@@ -321,22 +321,19 @@ export function TimeCapsule({
           }}
         />
 
-        {(isFocusMode ||
-          hasEnteredFocusMode) && (
-          <button
-            className="focusExitButton"
-            type="button"
-            onClick={
-              isFocusMode
-                ? exitFocusMode
-                : enterFocusMode
-            }
-          >
-            {isFocusMode
-              ? "退出"
-              : "进入全屏模式"}
-          </button>
-        )}
+        <button
+          className="focusExitButton"
+          type="button"
+          onClick={
+            isFocusMode
+              ? exitFocusMode
+              : enterFocusMode
+          }
+        >
+          {isFocusMode
+            ? "退出"
+            : "进入全屏模式"}
+        </button>
 
         <div className="formFooter">
           <span>
