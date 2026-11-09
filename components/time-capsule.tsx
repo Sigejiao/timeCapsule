@@ -3,12 +3,11 @@
 import {
   useEffect,
   useState,
+  useRef,
 } from "react";
-
 import type {
   FormEvent,
 } from "react";
-
 import type {
   CreateNoteResponse,
   ErrorResponse,
@@ -30,7 +29,11 @@ export function TimeCapsule({
   const [content, setContent] =
     useState("");
 
-    
+  const [isFocusMode, setIsFocusMode] =
+    useState(false);
+
+  const hasEnteredFocusMode = 
+    useRef(false);
 
 
   const [result, setResult] =
@@ -52,6 +55,58 @@ export function TimeCapsule({
     }
   }, [draftKey])
 
+  useEffect(() => {
+    const characterCount =
+      Array.from(content.trim()).length;
+
+    if (characterCount === 0) {
+      hasEnteredFocusMode.current = false;
+      return;
+    }
+
+    if (
+      characterCount > 5 &&
+      !hasEnteredFocusMode.current
+    ) {
+      hasEnteredFocusMode.current = true;
+      setIsFocusMode(true);
+    }
+  }, [content]);
+
+  useEffect(() => {
+    if (!isFocusMode) {
+      return;
+    }
+
+    const previousOverflow =
+      document.body.style.overflow;
+
+    document.body.style.overflow = "hidden";
+
+    function handleKeyDown(
+      event: KeyboardEvent,
+    ): void {
+      if (event.key === "Escape") {
+        setIsFocusMode(false);
+      }
+    }
+
+    window.addEventListener(
+      "keydown",
+      handleKeyDown,
+    );
+
+    return () => {
+      document.body.style.overflow =
+        previousOverflow;
+
+      window.removeEventListener(
+        "keydown",
+        handleKeyDown,
+      );
+    };
+  }, [isFocusMode]);
+
   async function handleSubmit(
     event: FormEvent<HTMLFormElement>,
   ): Promise<void> {
@@ -59,7 +114,7 @@ export function TimeCapsule({
 
     setErrorMessage(null);
     setResult(null);
-    setIsSubmitting(true); // 保留意见
+    setIsSubmitting(true); 
 
     try {
       const response = await fetch(
@@ -112,6 +167,9 @@ export function TimeCapsule({
       );
 
       setContent("");
+      setIsFocusMode(false);
+      hasEnteredFocusMode.current = false; 
+
 
     } catch (error) {
       setErrorMessage(
@@ -139,7 +197,11 @@ export function TimeCapsule({
       </header>
 
       <form
-        className="noteForm"
+        className={
+          isFocusMode
+            ? "noteForm noteFormFocus"
+            : "noteForm"
+        }
         onSubmit={handleSubmit}
       >
         <label htmlFor="content">
@@ -166,6 +228,18 @@ export function TimeCapsule({
             }
           }}
         />
+
+        {isFocusMode && (
+          <button
+            className="focusExitButton"
+            type="button"
+            onClick={() => {
+              setIsFocusMode(false);
+            }}
+          >
+            退出
+          </button>
+        )}
 
         <div className="formFooter">
           <span>
