@@ -30,6 +30,9 @@ export function TimeCapsule({
   const [content, setContent] =
     useState("");
 
+    
+
+
   const [result, setResult] =
     useState<CreateNoteResponse | null>(
       null,
